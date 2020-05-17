@@ -12,6 +12,7 @@ demonstrating the some of the basic features:
 
 ```cpp
 #include <iostream>
+#include "strong-types.hpp"
 
 struct Width { unsigned int v; }
 struct Height { unsigned int v; }
