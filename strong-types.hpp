@@ -13,7 +13,7 @@ but is treated as a different type by the compiler. This helps code express
 semantically different quantities, such as Meters vs. Yards, in the type system,
 preventing errors at compile time. Most comparison/arithmetic operators are
 allowed with these new strong typedefs. Implicit conversions during operations
-are not allowed between types and literals.
+are not allowed.
 
 See the definitions below this comment to see the full range of operators
 available.
@@ -23,6 +23,9 @@ NOTE:
 - The strong typedef can't mimic the member functions or fields of the
   underlying type. To access fields/member functions, use the 'v' member of
   the struct directly.
+- The operators defined in this file will only work on structs/classes that
+  have one member, which is named 'v'. This is to prevent the operators from
+  accidentally applying to types that happen to have a member named 'v'.
 
 Here is an example of usage:
 
@@ -53,14 +56,15 @@ pair + pair;          // Fails to compile; the strong-types operators only work
 
 FowardDistance f{67};
 f += 4; // Works as expected; f.v is now 71
+std::cout << f; // Prints 71
 */
 
 /*Poor man's concepts (until C++20 is supported)
   Basically, these enable_ifs ensure that the operators defined below
   only work with types of the following form: struct Foo { T v; }. This prevents
   most ambiguous template resolutions, as well as unintended uses of the below operators
-  on structs that happen to have a member named 'v'. With these restrictions, the operators
-  will only become enabled when used with a type with only one member in it: `v`.
+  on structs that happen to have a member named 'v'. The operators will only be
+  enabled when used with a type with only one member: `v`.
 */
 // Only return T if T is a struct where v is the only member
 #define T_IF_T_ST typename std::enable_if_t<(sizeof(T::v) == sizeof(T)), T>
@@ -89,116 +93,116 @@ OSTREAM_IF_T_ST& operator<<(std::ostream &out, T a)
 
 // Arithmetic operators
 template<typename T>
-inline T_IF_T_ST operator+(T a, T b) { return {a.v + b.v}; }
+T_IF_T_ST operator+(T a, T b) { return {a.v + b.v}; }
 
 template<typename T, typename T2>
-inline T_IF_T2_EQ_V operator+(T a, T2 &&b) { return {a.v + b}; }
+T_IF_T2_EQ_V operator+(T a, T2 &&b) { return {a.v + b}; }
 
 template<typename T>
-inline T_IF_T_ST operator-(T a, T b) { return {a.v - b.v}; }
+T_IF_T_ST operator-(T a, T b) { return {a.v - b.v}; }
 
 template<typename T, typename T2>
-inline T_IF_T2_EQ_V operator-(T a, T2 &&b) { return {a.v - b}; }
+T_IF_T2_EQ_V operator-(T a, T2 &&b) { return {a.v - b}; }
 
 template<typename T>
-inline T_IF_T_ST operator*(T a, T b) { return {a.v * b.v}; }
+T_IF_T_ST operator*(T a, T b) { return {a.v * b.v}; }
 
 template<typename T, typename T2>
-inline T_IF_T2_EQ_V operator*(T a, T2 &&b) { return {a.v * b}; }
+T_IF_T2_EQ_V operator*(T a, T2 &&b) { return {a.v * b}; }
 
 template<typename T>
-inline T_IF_T_ST operator/(T a, T b) { return {a.v / b.v}; }
+T_IF_T_ST operator/(T a, T b) { return {a.v / b.v}; }
 
 template<typename T, typename T2>
-inline T_IF_T2_EQ_V operator/(T a, T2 &&b) { return {a.v / b}; }
+T_IF_T2_EQ_V operator/(T a, T2 &&b) { return {a.v / b}; }
 
 template<typename T>
-inline T_IF_T_ST operator%(T a, T b) { return {a.v % b.v}; }
+T_IF_T_ST operator%(T a, T b) { return {a.v % b.v}; }
 
 template<typename T, typename T2>
-inline T_IF_T2_EQ_V operator%(T a, T2 &&b) { return {a.v % b}; }
+T_IF_T2_EQ_V operator%(T a, T2 &&b) { return {a.v % b}; }
 
 
 // Shortcut arithmetic operators
 template<typename T>
-inline T_IF_T_ST& operator+=(T &a, T b) { a.v += b.v; return a; }
+T_IF_T_ST& operator+=(T &a, T b) { a.v += b.v; return a; }
 
 template<typename T, typename T2>
-inline T_IF_T2_EQ_V& operator+=(T &a, T2 &&b) { a.v += b; return a; }
+T_IF_T2_EQ_V& operator+=(T &a, T2 &&b) { a.v += b; return a; }
 
 template<typename T>
-inline T_IF_T_ST& operator-=(T &a, T b) { a.v -= b.v; return a; }
+T_IF_T_ST& operator-=(T &a, T b) { a.v -= b.v; return a; }
 
 template<typename T, typename T2>
-inline T_IF_T2_EQ_V& operator-=(T &a, T2 &&b){ a.v -= b; return a; }
+T_IF_T2_EQ_V& operator-=(T &a, T2 &&b){ a.v -= b; return a; }
 
 template<typename T>
-inline T_IF_T_ST& operator*=(T &a, T b) { a *= b; return a; }
+T_IF_T_ST& operator*=(T &a, T b) { a *= b; return a; }
 
 template<typename T, typename T2>
-inline T_IF_T2_EQ_V& operator*=(T &a, T2 &&b) { a.v *= b; return a; }
+T_IF_T2_EQ_V& operator*=(T &a, T2 &&b) { a.v *= b; return a; }
 
 template<typename T>
-inline T_IF_T_ST& operator/=(T &a, T b) { a /= b; return a; }
+T_IF_T_ST& operator/=(T &a, T b) { a /= b; return a; }
 
 template<typename T, typename T2>
-inline T_IF_T2_EQ_V& operator/=(T &a, T2 &&b) { a.v /= b; return a; }
+T_IF_T2_EQ_V& operator/=(T &a, T2 &&b) { a.v /= b; return a; }
 
 template<typename T>
-inline T_IF_T_ST& operator%=(T &a, T b) { a %= b; return a; }
+T_IF_T_ST& operator%=(T &a, T b) { a %= b; return a; }
 
 template<typename T, typename T2>
-inline T_IF_T2_EQ_V& operator%=(T &a, T2 &&b) { a.v %= b; return a; }
+T_IF_T2_EQ_V& operator%=(T &a, T2 &&b) { a.v %= b; return a; }
 
 template<typename T>
-inline T_IF_T_ST& operator++(T &a) { ++a.v; return a; }
+T_IF_T_ST& operator++(T &a) { ++a.v; return a; }
 
 template<typename T>
-inline T_IF_T_ST operator++(T &a, int) { return T{a.v++}; }
+T_IF_T_ST operator++(T &a, int) { return T{a.v++}; }
 
 template<typename T>
-inline T_IF_T_ST& operator--(T &a) { --a.v; return a; }
+T_IF_T_ST& operator--(T &a) { --a.v; return a; }
 
 template<typename T>
-inline T_IF_T_ST operator--(T &a, int) { return T{a.v--}; }
+T_IF_T_ST operator--(T &a, int) { return T{a.v--}; }
 
 
 // Comparison operators
 template<typename T>
-inline BOOL_IF_T_ST operator==(T a, T b) { return a.v == b.v; }
+BOOL_IF_T_ST operator==(T a, T b) { return a.v == b.v; }
 
 template<typename T, typename T2>
-inline BOOL_IF_T2_EQ_V operator==(T a, T2 &&b) { return a.v == b; }
+BOOL_IF_T2_EQ_V operator==(T a, T2 &&b) { return a.v == b; }
 
 template<typename T>
-inline BOOL_IF_T_ST operator!=(T a, T b) { return a.v != b.v; }
+BOOL_IF_T_ST operator!=(T a, T b) { return a.v != b.v; }
 
 template<typename T, typename T2>
-inline BOOL_IF_T2_EQ_V operator!=(T a, T2 &&b) { return a.v != b; }
+BOOL_IF_T2_EQ_V operator!=(T a, T2 &&b) { return a.v != b; }
 
 template<typename T>
-inline BOOL_IF_T_ST operator<(T a, T b) { return a.v < b.v; }
+BOOL_IF_T_ST operator<(T a, T b) { return a.v < b.v; }
 
 template<typename T, typename T2>
-inline BOOL_IF_T2_EQ_V operator<(T a, T2 &&b) { return a.v < b; }
+BOOL_IF_T2_EQ_V operator<(T a, T2 &&b) { return a.v < b; }
 
 template<typename T>
-inline BOOL_IF_T_ST operator>(T a, T b) { return a.v > b.v; }
+BOOL_IF_T_ST operator>(T a, T b) { return a.v > b.v; }
 
 template<typename T, typename T2>
-inline BOOL_IF_T2_EQ_V operator>(T a, T2 &&b) { return a.v > b; }
+BOOL_IF_T2_EQ_V operator>(T a, T2 &&b) { return a.v > b; }
 
 template<typename T>
-inline BOOL_IF_T_ST operator<=(T a, T b) { return a.v <= b.v; }
+BOOL_IF_T_ST operator<=(T a, T b) { return a.v <= b.v; }
 
 template<typename T, typename T2>
-inline BOOL_IF_T2_EQ_V operator<=(T a, T2 &&b) { return a.v <= b; }
+BOOL_IF_T2_EQ_V operator<=(T a, T2 &&b) { return a.v <= b; }
 
 template<typename T>
-inline BOOL_IF_T_ST operator>=(T a, T b) { return a.v >= b.v; }
+BOOL_IF_T_ST operator>=(T a, T b) { return a.v >= b.v; }
 
 template<typename T, typename T2>
-inline BOOL_IF_T2_EQ_V operator>=(T a, T2 &&b) { return a.v >= b; }
+BOOL_IF_T2_EQ_V operator>=(T a, T2 &&b) { return a.v >= b; }
 
 #undef T_IF_T_ST
 #undef T_IF_T2_EQ_V
