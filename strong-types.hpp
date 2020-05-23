@@ -65,8 +65,8 @@ template<typename Type, typename Tag>
 struct strong_type {
     Type v;
 
-    strong_type() = default;
-    strong_type(Type value) : v(value) {}
+    constexpr strong_type(Type value) : v(value) {}
+    constexpr strong_type() = default;
 
     friend std::ostream& operator<<(std::ostream& out, strong_type a)
     {
