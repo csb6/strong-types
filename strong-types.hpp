@@ -1,10 +1,12 @@
 #ifndef STRONG_TYPES_LIB_H
 #define STRONG_TYPES_LIB_H
-#include <type_traits>
 #include <ostream>
 /**
 File: strong_types.hpp
 Author: Cole Blakley
+
+Special thanks to Sean Middleditch, who helped work out some of the idioms
+and strategies for the implementation.
 
 This is a single-header library. It adds an extremely simple implementation
 of "strong typedefs" to C++. Strong typedefs allow you to make a named type
@@ -59,154 +61,58 @@ f += 4; // Works as expected; f.v is now 71
 std::cout << f; // Prints 71
 */
 
-/*Poor man's concepts (until C++20 is supported)
-  Basically, these enable_ifs ensure that the operators defined below
-  only work with types of the following form: struct Foo { T v; }. This prevents
-  most ambiguous template resolutions, as well as unintended uses of the below operators
-  on structs that happen to have a member named 'v'. The operators will only be
-  enabled when used with a type with only one member: `v`.
-*/
-// Only return T if T is a struct where v is the only member
-#define T_IF_T_ST typename std::enable_if_t<(sizeof(T::v) == sizeof(T)), T>
-// Only return T if the type of T2 is the same as the type of T.v in a struct
-// where v is the only member
-#define T_IF_T2_EQ_V typename std::enable_if_t<sizeof(T::v) == sizeof(T) \
-                                               && std::is_same_v<decltype(T::v), T2>, T>
-// Only return bool if the type of T2 is the same as the type of T.v in a struct
-// where v is the only member
-#define BOOL_IF_T2_EQ_V typename std::enable_if_t<sizeof(T::v) == sizeof(T) \
-                                                  && std::is_same_v<decltype(T::v), T2>, bool>
-// Only return bool if T is a struct where v is the only member
-#define BOOL_IF_T_ST \
-    typename std::enable_if_t<(sizeof(T::v) == sizeof(T)), bool>
-// Only return std::ostream if T is a struct where v is the only member
-#define OSTREAM_IF_T_ST \
-    typename std::enable_if_t<(sizeof(T::v) == sizeof(T)), std::ostream>
+template<typename Type, typename Tag>
+struct strong_type {
+    Type v;
 
-// For std::cout and friends
-template<typename T>
-OSTREAM_IF_T_ST& operator<<(std::ostream &out, T a)
-{
-    out << a.v;
-    return out;
-}
+    strong_type() = default;
+    strong_type(Type value) : v(value) {}
+
+    friend std::ostream& operator<<(std::ostream& out, strong_type a)
+    {
+        return (out << a.v);
+    }
 
 // Arithmetic operators
-template<typename T>
-T_IF_T_ST operator+(T a, T b) { return {a.v + b.v}; }
+    friend strong_type operator+(strong_type a, strong_type b) { return {a.v + b.v}; }
+    friend strong_type operator+(strong_type a, Type &&b) { return {a.v + b}; }
+    friend strong_type operator-(strong_type a, strong_type b) { return {a.v - b.v}; }
+    friend strong_type operator-(strong_type a, Type &&b) { return {a.v - b}; }
 
-template<typename T, typename T2>
-T_IF_T2_EQ_V operator+(T a, T2 &&b) { return {a.v + b}; }
-
-template<typename T>
-T_IF_T_ST operator-(T a, T b) { return {a.v - b.v}; }
-
-template<typename T, typename T2>
-T_IF_T2_EQ_V operator-(T a, T2 &&b) { return {a.v - b}; }
-
-template<typename T>
-T_IF_T_ST operator*(T a, T b) { return {a.v * b.v}; }
-
-template<typename T, typename T2>
-T_IF_T2_EQ_V operator*(T a, T2 &&b) { return {a.v * b}; }
-
-template<typename T>
-T_IF_T_ST operator/(T a, T b) { return {a.v / b.v}; }
-
-template<typename T, typename T2>
-T_IF_T2_EQ_V operator/(T a, T2 &&b) { return {a.v / b}; }
-
-template<typename T>
-T_IF_T_ST operator%(T a, T b) { return {a.v % b.v}; }
-
-template<typename T, typename T2>
-T_IF_T2_EQ_V operator%(T a, T2 &&b) { return {a.v % b}; }
-
-
+    friend strong_type operator*(strong_type a, strong_type b) { return {a.v * b.v}; }
+    friend strong_type operator*(strong_type a, Type &&b) { return {a.v * b}; }
+    friend strong_type operator/(strong_type a, strong_type b) { return {a.v / b.v}; }
+    friend strong_type operator/(strong_type a, Type &&b) { return {a.v / b}; }
+    friend strong_type operator%(strong_type a, strong_type b) { return {a.v % b.v}; }
+    friend strong_type operator%(strong_type a, Type &&b) { return {a.v % b}; }
 // Shortcut arithmetic operators
-template<typename T>
-T_IF_T_ST& operator+=(T &a, T b) { a.v += b.v; return a; }
-
-template<typename T, typename T2>
-T_IF_T2_EQ_V& operator+=(T &a, T2 &&b) { a.v += b; return a; }
-
-template<typename T>
-T_IF_T_ST& operator-=(T &a, T b) { a.v -= b.v; return a; }
-
-template<typename T, typename T2>
-T_IF_T2_EQ_V& operator-=(T &a, T2 &&b){ a.v -= b; return a; }
-
-template<typename T>
-T_IF_T_ST& operator*=(T &a, T b) { a *= b; return a; }
-
-template<typename T, typename T2>
-T_IF_T2_EQ_V& operator*=(T &a, T2 &&b) { a.v *= b; return a; }
-
-template<typename T>
-T_IF_T_ST& operator/=(T &a, T b) { a /= b; return a; }
-
-template<typename T, typename T2>
-T_IF_T2_EQ_V& operator/=(T &a, T2 &&b) { a.v /= b; return a; }
-
-template<typename T>
-T_IF_T_ST& operator%=(T &a, T b) { a %= b; return a; }
-
-template<typename T, typename T2>
-T_IF_T2_EQ_V& operator%=(T &a, T2 &&b) { a.v %= b; return a; }
-
-template<typename T>
-T_IF_T_ST& operator++(T &a) { ++a.v; return a; }
-
-template<typename T>
-T_IF_T_ST operator++(T &a, int) { return T{a.v++}; }
-
-template<typename T>
-T_IF_T_ST& operator--(T &a) { --a.v; return a; }
-
-template<typename T>
-T_IF_T_ST operator--(T &a, int) { return T{a.v--}; }
-
+    friend strong_type& operator+=(strong_type &a, strong_type b) { a.v += b.v; return a; }
+    friend strong_type& operator+=(strong_type &a, Type &&b) { a.v += b; return a; }
+    friend strong_type& operator-=(strong_type &a, strong_type b) { a.v -= b.v; return a; }
+    friend strong_type& operator-=(strong_type &a, Type &&b){ a.v -= b; return a; }
+    friend strong_type& operator*=(strong_type &a, strong_type b) { a *= b; return a; }
+    friend strong_type& operator*=(strong_type &a, Type &&b) { a.v *= b; return a; }
+    friend strong_type& operator/=(strong_type &a, strong_type b) { a /= b; return a; }
+    friend strong_type& operator/=(strong_type &a, Type &&b) { a.v /= b; return a; }
+    friend strong_type& operator%=(strong_type &a, strong_type b) { a %= b; return a; }
+    friend strong_type& operator%=(strong_type &a, Type &&b) { a.v %= b; return a; }
+    friend strong_type& operator++(strong_type &a) { ++a.v; return a; }
+    friend strong_type operator++(strong_type &a, int) { return strong_type{a.v++}; }
+    friend strong_type& operator--(strong_type &a) { --a.v; return a; }
+    friend strong_type operator--(strong_type &a, int) { return strong_type{a.v--}; }
 
 // Comparison operators
-template<typename T>
-BOOL_IF_T_ST operator==(T a, T b) { return a.v == b.v; }
-
-template<typename T, typename T2>
-BOOL_IF_T2_EQ_V operator==(T a, T2 &&b) { return a.v == b; }
-
-template<typename T>
-BOOL_IF_T_ST operator!=(T a, T b) { return a.v != b.v; }
-
-template<typename T, typename T2>
-BOOL_IF_T2_EQ_V operator!=(T a, T2 &&b) { return a.v != b; }
-
-template<typename T>
-BOOL_IF_T_ST operator<(T a, T b) { return a.v < b.v; }
-
-template<typename T, typename T2>
-BOOL_IF_T2_EQ_V operator<(T a, T2 &&b) { return a.v < b; }
-
-template<typename T>
-BOOL_IF_T_ST operator>(T a, T b) { return a.v > b.v; }
-
-template<typename T, typename T2>
-BOOL_IF_T2_EQ_V operator>(T a, T2 &&b) { return a.v > b; }
-
-template<typename T>
-BOOL_IF_T_ST operator<=(T a, T b) { return a.v <= b.v; }
-
-template<typename T, typename T2>
-BOOL_IF_T2_EQ_V operator<=(T a, T2 &&b) { return a.v <= b; }
-
-template<typename T>
-BOOL_IF_T_ST operator>=(T a, T b) { return a.v >= b.v; }
-
-template<typename T, typename T2>
-BOOL_IF_T2_EQ_V operator>=(T a, T2 &&b) { return a.v >= b; }
-
-#undef T_IF_T_ST
-#undef T_IF_T2_EQ_V
-#undef BOOL_IF_T2_EQ_V
-#undef BOOL_IF_T_ST
-#undef OSTREAM_IF_T_ST
+    friend bool operator==(strong_type a, strong_type b) { return a.v == b.v; }
+    friend bool operator==(strong_type a, Type &&b) { return a.v == b; }
+    friend bool operator!=(strong_type a, strong_type b) { return a.v != b.v; }
+    friend bool operator!=(strong_type a, Type &&b) { return a.v != b; }
+    friend bool operator<(strong_type a, strong_type b) { return a.v < b.v; }
+    friend bool operator<(strong_type a, Type &&b) { return a.v < b; }
+    friend bool operator>(strong_type a, strong_type b) { return a.v > b.v; }
+    friend bool operator>(strong_type a, Type &&b) { return a.v > b; }
+    friend bool operator<=(strong_type a, strong_type b) { return a.v <= b.v; }
+    friend bool operator<=(strong_type a, Type &&b) { return a.v <= b; }
+    friend bool operator>=(strong_type a, strong_type b) { return a.v >= b.v; }
+    friend bool operator>=(strong_type a, Type &&b) { return a.v >= b; }
+};
 #endif

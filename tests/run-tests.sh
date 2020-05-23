@@ -5,7 +5,7 @@ set -e
 compiler=clang++
 #C++17 is required for this library
 standard=c++17
-flags="-std=$standard -pedantic-errors -I.."
+flags="-std=$standard -pedantic-errors -Wall -Wextra -I.. "
 
 echo "RUNNING TEST ORACLE (baseline for real tests; doesn't use strong_types)"
 $compiler $flags -o test-oracle test-oracle.cpp

@@ -1,11 +1,11 @@
 #include <iostream>
-#include "strong-types.hpp"
+#include <strong-types.hpp>
 #include <cassert>
 
 // If tests are successful, only output should be '435' at runtime
 
-struct Width  { int v; };
-struct Height { int v; };
+struct Width : strong_type<int, Width> {};
+struct Height : strong_type<int, Height> {};
 
 int main()
 {
