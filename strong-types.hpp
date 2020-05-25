@@ -5,8 +5,8 @@
 File: strong_types.hpp
 Author: Cole Blakley
 
-Special thanks to Sean Middleditch, who helped work out some of the idioms
-and strategies for the implementation.
+Special thanks to Sean Middleditch for helping to redesign the implementation
+to be simpler/quicker to compile.
 
 This is a single-header library. It adds an extremely simple implementation
 of "strong typedefs" to C++. Strong typedefs allow you to make a named type
@@ -25,20 +25,14 @@ NOTE:
 - The strong typedef can't mimic the member functions or fields of the
   underlying type. To access fields/member functions, use the 'v' member of
   the struct directly.
-- The operators defined in this file will only work on structs/classes that
-  have one member, which is named 'v'. This is to prevent the operators from
-  accidentally applying to types that happen to have a member named 'v'.
 
 Here is an example of usage:
 
-// Define some strong typedefs; always use 'v' as the member name, and
-// always make 'v' a public member. In order to use an operator with the
-// typedef, 'v''s type must already have that operator defined for it.
-struct Meter { int v; }
-struct Yard { int v; }
-struct ForwardDistance { unsigned int v; }
-struct Pointless { std::vector<int> v; } // Compiles, but can't use any of
-                                         // the member functions of 'v'
+struct Meter : strong_type<int, Meter> {};
+struct Yard : strong_type<int, Yard> {};
+struct ForwardDistance : strong_type<unsigned int, ForwardDistance> {};
+// Compiles, but can't use any of the vector's member functions directly
+struct Pointless : strong_type<std::vector<int>, Pointless> {};
 struct Pair { bool v; int w; }
 
 // Always use uniform initialization
@@ -48,13 +42,10 @@ Yard length3{8};
 Yard length4{9};
 Yard length5 = {5}; // This works, too
 Yard length6 = 5; // Fails to compile
-Pair p{3, 3};
 
 length1 + length2;      // Compiles, works as expected
 length2 = length1 + 5; // Compiles, works as expected
 length1 = length3;    // Fails to compile; types differ
-pair + pair;          // Fails to compile; the strong-types operators only work
-                      // on structs of form: struct X { T v; };, which Pair is not
 
 FowardDistance f{67};
 f += 4; // Works as expected; f.v is now 71

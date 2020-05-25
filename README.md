@@ -14,8 +14,8 @@ demonstrating the some of the basic features:
 #include <iostream>
 #include "strong-types.hpp"
 
-struct Width { unsigned int v; }
-struct Height { unsigned int v; }
+struct Width : strong_type<unsigned int, Width> {}
+struct Height : strong_type<unsigned int, Height> {}
 
 int main()
 {
@@ -35,15 +35,15 @@ int main()
 
 ## Features
 
-- Simple creation of typedefs; simply create a struct with a single member that
-is named 'v'
+- Simple creation of typedefs; simply create a struct inheriting from `strong_type<A, B>`,
+where `A` is the type you want to typedef and `B` is the type name of the typedef
 - Templated operator overloads, including most arithmetic, comparison, and increment/
 decrementing operators, as well as an output stream operator. Adding your own operators
 is trivial
-- Operator overloads use SFINAE to check that the types they are used on only have a
-single member, named v, preventing most ambiguous template resolutions
 - To access members/member functions of the underlying type, simply access the
-'v' member.
+'v' member. If you don't want to see the 'v' member, then simply use private inheritance.
+
+See `example.cpp` and the files in the `tests` directory for more examples of usage.
 
 [This blog post](https://www.fluentcpp.com/2018/04/06/strong-types-by-struct) by Vincent
 Zalzal was the inspiration for this simple method of creating strong typedefs.

@@ -4,14 +4,9 @@
 #include <string>
 #include <algorithm>
 
-struct NaturalInt {
-    unsigned int v;
-};
+struct NaturalInt : strong_type<unsigned int, NaturalInt> {};
 
-struct Name {
-    std::string v;
-};
-
+struct Name : public strong_type<std::string, Name> {};
 
 int main()
 {
@@ -30,11 +25,12 @@ int main()
     std::cout << '\n';
 
     // Create strong string typedefs
-    Name person{"Jean"};
-    Name person2{"Jeff"};
-    person += {"-Paul"};
+    Name person{{"Jean"}};
+    Name person2{{"Jeff"}};
+    person += "-Paul";
     std::cout << person << '\n';
     std::cout << (person < person2) << '\n';
+    std::cout << "Using v member directly: " << person.v << '\n';
  
     return 0;
 }
